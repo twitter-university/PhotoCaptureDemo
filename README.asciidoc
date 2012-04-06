@@ -1,4 +1,4 @@
-= About Audio Player Demo
+= About This Project
 
 This project demonstrates how to develop a simple photo capture application.
 
