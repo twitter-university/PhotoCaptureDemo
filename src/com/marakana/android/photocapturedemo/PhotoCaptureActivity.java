@@ -21,8 +21,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-public class CameraActivity extends Activity implements PictureCallback {
-    private static final String TAG = "CameraRecorderDemoActivity";
+public class PhotoCaptureActivity extends Activity implements PictureCallback {
+    private static final String TAG = "PhotoCaptureActivity";
 
     Camera camera;
 
@@ -63,9 +63,10 @@ public class CameraActivity extends Activity implements PictureCallback {
             protected void onPostExecute(Camera camera) {
                 if (camera == null) {
                     Log.wtf(TAG, "Failed to get camera");
-                    Toast.makeText(CameraActivity.this, "Failed to open camera", Toast.LENGTH_SHORT);
+                    Toast.makeText(PhotoCaptureActivity.this, "Failed to open camera",
+                            Toast.LENGTH_SHORT);
                 } else {
-                    CameraActivity.this.initCamera(camera);
+                    PhotoCaptureActivity.this.initCamera(camera);
                 }
             }
         }.execute();
@@ -75,7 +76,7 @@ public class CameraActivity extends Activity implements PictureCallback {
         // we now have the camera
         this.camera = camera;
         // create a preview for our camera
-        this.cameraPreview = new CameraPreview(CameraActivity.this, this.camera);
+        this.cameraPreview = new CameraPreview(PhotoCaptureActivity.this, this.camera);
         // add the preview to our preview frame
         this.cameraPreviewFrame.addView(this.cameraPreview, 0);
         this.takePictureButton.setEnabled(true);
