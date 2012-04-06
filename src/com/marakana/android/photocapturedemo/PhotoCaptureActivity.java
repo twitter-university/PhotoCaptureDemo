@@ -12,6 +12,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -107,7 +108,7 @@ public class PhotoCaptureActivity extends Activity implements PictureCallback {
     // the data will come back in jpeg format
     public void onPictureTaken(byte[] data, Camera camera) {
         Log.d(TAG, "onPictureTaken()");
-        String file = this.getFile();
+        File file = this.getFile();
         try {
             OutputStream out = new FileOutputStream(file);
             try {
@@ -115,16 +116,17 @@ public class PhotoCaptureActivity extends Activity implements PictureCallback {
             } finally {
                 out.close();
             }
-            Log.d(TAG, "Wrote picture to: " + file);
-            Intent intent = new Intent(this, PhotoActivity.class);
-            intent.putExtra("file", file);
+            Log.d(TAG, "Wrote picture to: " + file.getAbsolutePath());
+            Uri uri = Uri.fromFile(file);
+            Intent intent = new Intent(this, PhotoViewActivity.class);
+            intent.setData(uri);
             super.startActivity(intent);
         } catch (IOException e) {
             Log.d(TAG, "Failed to save picture", e);
         }
     }
 
-    private String getFile() {
+    private File getFile() {
         File dir = new File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), this
                         .getClass().getPackage().getName());
@@ -132,8 +134,8 @@ public class PhotoCaptureActivity extends Activity implements PictureCallback {
             Log.d(TAG, "Failed to create storage directory");
             return null;
         } else {
-            return dir.getAbsolutePath() + File.separator
-                    + new SimpleDateFormat("'IMG_'yyyyMMddHHmmss'.jpg'").format(new Date());
+            return new File(dir.getAbsolutePath(), new SimpleDateFormat(
+                    "'IMG_'yyyyMMddHHmmss'.jpg'").format(new Date()));
         }
     }
 }
