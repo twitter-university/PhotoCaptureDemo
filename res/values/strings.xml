@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Photo Capture Demo</string>
+    <string name="your_photo">Your Photo</string>
+    <string name="back">Back</string>
+    <string name="take_picture">Take Picture</string>
+    <string name="delete">Delete</string>
+
+</resources>
