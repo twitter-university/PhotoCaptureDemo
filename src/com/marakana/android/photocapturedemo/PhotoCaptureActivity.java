@@ -12,6 +12,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -22,7 +26,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
-public class PhotoCaptureActivity extends Activity implements PictureCallback {
+public class PhotoCaptureActivity extends Activity implements PictureCallback, LocationListener {
     private static final String TAG = "PhotoCaptureActivity";
 
     Camera camera;
@@ -33,6 +37,8 @@ public class PhotoCaptureActivity extends Activity implements PictureCallback {
 
     CameraPreview cameraPreview;
 
+    LocationManager locationManager;
+
     @Override
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
@@ -40,6 +46,7 @@ public class PhotoCaptureActivity extends Activity implements PictureCallback {
         this.cameraPreviewFrame = (FrameLayout)super.findViewById(R.id.camera_preview);
         this.takePictureButton = (ImageButton)super.findViewById(R.id.takePictureButton);
         this.takePictureButton.setEnabled(false);
+        this.locationManager = (LocationManager)super.getSystemService(LOCATION_SERVICE);
     }
 
     @Override
@@ -73,6 +80,7 @@ public class PhotoCaptureActivity extends Activity implements PictureCallback {
         }.execute();
     }
 
+    // gets called from onResume()'s AsyncTask
     void initCamera(Camera camera) {
         // we now have the camera
         this.camera = camera;
@@ -85,6 +93,20 @@ public class PhotoCaptureActivity extends Activity implements PictureCallback {
         this.camera.getParameters().setJpegQuality(75);
         // optionally, use camera.setPreviewCallback(PreviewCallback) to get
         // each preview frame
+
+        // we also want to configure location details with our camera, but we
+        // first need to request location data
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        String provider = locationManager.getBestProvider(criteria, true);
+        if (provider == null) {
+            Log.d(TAG, "No good location provider is available");
+        } else {
+            Log.d(TAG, "Set the location provider to " + provider);
+            this.onLocationChanged(this.locationManager.getLastKnownLocation(provider));
+            this.locationManager.requestLocationUpdates(provider, 1000, 100, this);
+            // the updates will be given to us via onLocationChanged
+        }
     }
 
     @Override
@@ -96,6 +118,7 @@ public class PhotoCaptureActivity extends Activity implements PictureCallback {
             this.camera = null;
             this.cameraPreviewFrame.removeView(this.cameraPreview);
         }
+        this.locationManager.removeUpdates(this);
     }
 
     // gets called by the button press
@@ -137,5 +160,34 @@ public class PhotoCaptureActivity extends Activity implements PictureCallback {
             return new File(dir.getAbsolutePath(), new SimpleDateFormat(
                     "'IMG_'yyyyMMddHHmmss'.jpg'").format(new Date()));
         }
+    }
+
+    public void onLocationChanged(Location location) {
+        if (this.camera != null && location != null) {
+            if (location.hasAccuracy() && location.getAccuracy() < 500
+                    && location.getTime() < System.currentTimeMillis() - (30 * 60 * 1000)) {
+                Log.d(TAG, "Ignoring inaccurate or stale location: " + location);
+            } else {
+                Log.d(TAG, "Setting camera location: " + location);
+                this.camera.getParameters().setGpsLatitude(location.getLatitude());
+                this.camera.getParameters().setGpsLongitude(location.getLongitude());
+                this.camera.getParameters().setGpsAltitude(location.getAltitude());
+                this.camera.getParameters().setGpsTimestamp(location.getTime());
+            }
+        } else {
+            Log.d(TAG, "No camera or location. Cannot configure the camera.");
+        }
+    }
+
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        // ignored
+    }
+
+    public void onProviderEnabled(String provider) {
+        // ignored
+    }
+
+    public void onProviderDisabled(String provider) {
+        // ignored
     }
 }

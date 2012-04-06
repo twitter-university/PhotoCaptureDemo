@@ -33,16 +33,10 @@ public class PhotoViewActivity extends Activity {
 
     // gets called by the button press
     public void delete(View v) {
-        Log.d(TAG, "Deleting " + this.uri.getPath());
-        File file = new File(this.uri.getPath());
-        if (file.exists()) {
-            if (file.delete()) {
-                Log.d(TAG, "Deleted: " + file.getAbsolutePath());
-            } else {
-                Log.d(TAG, "Failed to delete: " + file.getAbsolutePath());
-            }
+        if (new File(this.uri.getPath()).delete()) {
+            Log.d(TAG, "Deleted: " + this.uri);
         } else {
-            Log.d(TAG, "No file to delete: " + file.getAbsolutePath());
+            Log.d(TAG, "Failed to delete: " + this.uri);
         }
         Log.d(TAG, "Going back");
         super.finish();
